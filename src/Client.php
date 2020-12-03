@@ -270,6 +270,57 @@ class Client
     }
 
     /**
+     * Copy a file.
+     *
+     * $options:
+     * required BucketName or BucketId the source bucket
+     * required FileName the file to copy
+     * required SaveAs the path and file name to save to
+     * optional destinationBucketId or destinationBucketName, the destination bucket
+     *
+     * @param array $options
+     *
+     * @throws B2Exception
+     * @throws GuzzleException
+     *
+     * @return File
+     */
+    public function copy(array $options)
+    {
+        $options['FileName'] = ltrim($options['FileName'], '/');
+        $options['SaveAs'] = ltrim($options['SaveAs'], '/');
+
+        if (!isset($options['destinationBucketId']) && isset($options['destinationBucketName'])) {
+            $options['destinationBucketId'] = $this->getBucketIdFromName($options['destinationBucketName']);
+        }
+
+        if (!isset($options['BucketId']) && isset($options['BucketName'])) {
+            $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
+        }
+
+        $sourceFileId = $this->getFileIdFromBucketIdAndFileName($options['BucketId'], $options['FileName']);
+
+        $json = [
+            'sourceFileId' => $sourceFileId,
+            'fileName'     => $options['SaveAs'],
+        ];
+        if (isset($options['destinationBucketId'])) {
+            $json['destinationBucketId'] = $options['destinationBucketId'];
+        }
+
+        $response = $this->sendAuthorizedRequest('POST', 'b2_copy_file', $json);
+
+        return new File(
+            $response['fileId'],
+            $response['fileName'],
+            $response['contentSha1'],
+            $response['contentLength'],
+            $response['contentType'],
+            $response['fileInfo']
+        );
+    }
+
+    /**
      * Retrieve a collection of File objects representing the files stored inside a bucket.
      *
      * @param array $options
@@ -492,6 +543,26 @@ class Client
                 return $file->getId();
             }
         }
+    }
+
+    /**
+     * @param $bucketId
+     * @param $fileName
+     *
+     * @throws B2Exception
+     * @throws GuzzleException
+     *
+     * @return string|bool The file's id, or false if not found
+     */
+    protected function getFileIdFromBucketIdAndFileName($bucketId, $fileName)
+    {
+        $response = $this->sendAuthorizedRequest('POST', 'b2_list_file_names', [
+            'bucketId'      => $bucketId,
+            'startFileName' => $fileName,
+            'maxFileCount'  => 1,
+        ]);
+
+        return count($response['files']) === 1 ? $response['files'][0]['fileId'] : false;
     }
 
     /**
