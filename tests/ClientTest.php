@@ -502,7 +502,7 @@ class ClientTest extends TestCase
         $actual = $client->copy([
             'BucketId' => 'sourceBucketId',
             'FileName' => 'sourceFileName',
-            'SaveAs' => 'destinationFileName',
+            'SaveAs'   => 'destinationFileName',
         ]);
 
         $this->assertInstanceOf('BackblazeB2\File', $actual);

@@ -270,7 +270,7 @@ class Client
     }
 
     /**
-     * Copy a file
+     * Copy a file.
      *
      * $options:
      * required BucketName or BucketId the source bucket
@@ -279,9 +279,11 @@ class Client
      * optional destinationBucketId or destinationBucketName, the destination bucket
      *
      * @param array $options
-     * @return File
+     *
      * @throws B2Exception
      * @throws GuzzleException
+     *
+     * @return File
      */
     public function copy(array $options)
     {
@@ -300,7 +302,7 @@ class Client
 
         $json = [
             'sourceFileId' => $sourceFileId,
-            'fileName' => $options['SaveAs'],
+            'fileName'     => $options['SaveAs'],
         ];
         if (isset($options['destinationBucketId'])) {
             $json['destinationBucketId'] = $options['destinationBucketId'];
@@ -547,16 +549,17 @@ class Client
      * @param $bucketId
      * @param $fileName
      *
-     * @return string|bool The file's id, or false if not found
      * @throws B2Exception
      * @throws GuzzleException
+     *
+     * @return string|bool The file's id, or false if not found
      */
     protected function getFileIdFromBucketIdAndFileName($bucketId, $fileName)
     {
         $response = $this->sendAuthorizedRequest('POST', 'b2_list_file_names', [
-            'bucketId' => $bucketId,
+            'bucketId'      => $bucketId,
             'startFileName' => $fileName,
-            'maxFileCount' => 1,
+            'maxFileCount'  => 1,
         ]);
 
         return count($response['files']) === 1 ? $response['files'][0]['fileId'] : false;
